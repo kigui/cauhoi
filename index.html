@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pixel Dog Quiz - Center Version</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=VT323&display=swap');
+
+        body {
+            font-family: 'VT323', monospace;
+            background-color: #f0f8ff;
+            margin: 0;
+            height: 100vh;
+            overflow: hidden;
+            /* Thêm hình nền pixel mờ nếu thích */
+            background-image: radial-gradient(#d0e8ff 2px, transparent 2px);
+            background-size: 20px 20px;
+        }
+
+        /* --- THAY ĐỔI CHÍNH: CĂN GIỮA MÀN HÌNH --- */
+        #pet-container {
+            position: fixed;
+            /* Sử dụng kỹ thuật căn giữa tuyệt đối */
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            z-index: 10;
+            width: 300px; /* Giới hạn chiều rộng để trông gọn gàng ở giữa */
+        }
+
+        /* BÓNG NÓI */
+        #speech-bubble {
+            background: white;
+            border: 3px solid black;
+            padding: 20px;
+            border-radius: 15px;
+            position: relative;
+            margin-bottom: 20px; /* Khoảng cách với con chó */
+            width: 100%;
+            box-sizing: border-box;
+            box-shadow: 6px 6px 0px rgba(0,0,0,0.2);
+            font-size: 22px;
+            text-align: center;
+            /* display: none; <-- Bỏ dòng này để nó hiện luôn từ đầu */
+        }
+
+        /* Mũi tên chỉ xuống của bóng nói */
+        #speech-bubble::after {
+            content: '';
+            position: absolute;
+            bottom: -15px;
+            left: 50%;
+            transform: translateX(-50%);
+            border-width: 15px 15px 0;
+            border-style: solid;
+            border-color: black transparent transparent transparent;
+        }
+
+        /* KHUNG VUÔNG CHỨA CHÓ */
+        #dog-box {
+            width: 300px; /* Tăng kích thước một chút */
+            height: 250px;
+            background-color: #ffcc00;
+            border: 2px solid black;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            overflow: hidden; /* Đảm bảo ảnh không tràn ra ngoài */
+            box-shadow: 5px 5px 0px rgba(0,0,0,0.3);
+            /* Hiệu ứng nhún nhảy nhẹ cho cả hộp */
+            animation: softBounce 2s infinite ease-in-out;
+        }
+
+        @keyframes softBounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-8px); }
+        }
+
+        #dog-box:hover {
+            background-color: #ffd633; /* Sáng lên khi di chuột vào */
+        }
+
+        /* --- THAY ĐỔI CHÍNH: CSS CHO ẢNH CHÓ --- */
+        #pixel-dog-img {
+            width: 90%;
+            height: 90%;
+            object-fit: cover; /* Đảm bảo ảnh lấp đầy khung */
+            /* Quan trọng: Giữ cho ảnh pixel sắc nét khi phóng to */
+            image-rendering: pixelated; 
+            image-rendering: -moz-crisp-edges;
+            image-rendering: crisp-edges;
+        }
+
+        /* PHẦN GIAO DIỆN NHẬP LIỆU */
+        input[type="text"] {
+            width: 100%;
+            padding: 8px;
+            margin-top: 15px;
+            font-family: 'VT323', monospace;
+            font-size: 20px;
+            box-sizing: border-box;
+            border: 2px solid black;
+            text-align: center;
+        }
+
+        button {
+            margin-top: 10px;
+            background: #333;
+            color: white;
+            border: 2px solid black;
+            padding: 8px 10px;
+            font-family: 'VT323', monospace;
+            cursor: pointer;
+            width: 100%;
+            font-size: 20px;
+            transition: all 0.1s;
+        }
+
+        button:hover {
+            background: #555;
+            transform: translate(2px, 2px); /* Hiệu ứng nút bấm */
+            box-shadow: -2px -2px 0 black;
+        }
+        
+        button:active {
+            transform: translate(4px, 4px);
+             box-shadow: none;
+        }
+
+        /* BẢNG ĐIỂM */
+        #score-board {
+            position: absolute;
+            top: -15px;
+            right: -10px;
+            background: #d32f2f;
+            color: white;
+            padding: 5px 10px;
+            font-size: 18px;
+            border: 2px solid black;
+            transform: rotate(5deg);
+        }
+
+        /* CSS BỨC THƯ (GIỮ NGUYÊN) */
+        #letter-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.8);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+            backdrop-filter: blur(5px);
+        }
+
+        .letter {
+            background: #fff8dc;
+            width: 90%;
+            max-width: 450px;
+            padding: 40px;
+            border: 3px solid #8b4513;
+            box-shadow: 15px 15px 0px rgba(0,0,0,0.5);
+            text-align: center;
+            position: relative;
+            transform: rotate(-2deg);
+            animation: popIn 0.6s cubic-bezier(0.68, -0.55, 0.27, 1.55); /* Hiệu ứng nảy */
+        }
+
+        @keyframes popIn {
+            0% { transform: scale(0) rotate(0deg); opacity: 0; }
+            100% { transform: scale(1) rotate(-2deg); opacity: 1; }
+        }
+
+        .letter h1 { color: #d32f2f; margin-top: 0; font-size: 40px; letter-spacing: 2px; }
+        .letter p { font-size: 26px; line-height: 1.4; color: #333; }
+        .stamp {
+            position: absolute;
+            top: 20px; right: 20px;
+            border: 3px dotted red;
+            padding: 5px 10px; color: red;
+            transform: rotate(15deg); font-weight: bold; font-size: 24px;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="pet-container">
+        <div id="speech-bubble">
+            <div id="score-board">Điểm: <span id="score-val">0</span>/5</div>
+            <p id="question-text" style="margin: 0;">Chào mừng! Tôi là Con Mỡ kẻ gác nhà của Mỹ Ý nếu muốn gặp Mỹ Ý thì phải trả lời câu hỏi ?.</p>
+            
+            <div id="input-area" style="display:none;">
+                <input type="text" id="user-answer" placeholder="Nhập đáp án..." autocomplete="off">
+                <button onclick="checkAnswer()">Gửi trả lời</button>
+            </div>
+            
+            <button id="start-btn" onclick="startGame()">Thử thách ngay!</button>
+        </div>
+
+        <div id="dog-box" onclick="pokeDog()">
+            <img id="pixel-dog-img" src="15c144e8dc552a100b3292d268854499.gif" alt="Pixel Dog">
+            
+            </div>
+    </div>
+
+    <div id="letter-overlay">
+        <div class="letter">
+            <div class="stamp">ĐÃ CHỨNG NHẬN</div>
+            <h1>THƯ CHÚC MỪNG</h1>
+            <hr style="border-top: 2px dashed #8b4513;">
+            <p>Tuyệt vời!</p>
+            <p>Bạn đã trả lời đúng cả 5 câu hỏi. Hãy vào nhà và hôn Mỹ ý một cái đi nhé :)).</p>
+            <p style="font-size: 50px; margin: 20px 0;">🏆 🦴 🦴 🦴</p>
+            <button onclick="closeLetter()" style="background:#d32f2f; border-color: #a00000;">Nhận phần thưởng</button>
+        </div>
+    </div>
+
+    <script>
+        // (Phần Javascript giữ nguyên logic như cũ)
+        let score = 0;
+        const targetScore = 5;
+        
+      const questions = [
+            // Lưu ý: Các đáp án trong ngoặc [] PHẢI viết thường hoàn toàn
+            { q: "Mý Ý có tên ở nhà là gì?", a: ["loan"] },
+            
+            // Bạn có thể thêm nhiều cách trả lời cho 1 câu (ví dụ: dưa hấu, quả dưa hấu)
+            { q: "Mỹ Ý thích ăn trái cây loại gì?", a: ["dưa hấu", "quả dưa hấu"] },
+            
+            { q: "Con mỡ có màu gì", a: ["vàng", "màu vàng"] },
+            
+            { q: "Mỹ ý có hay ngủ sớm không ?", a: ["không", "ko", "k"] },
+            
+            { q: "Mỹ ý có phải là người xinh đẹp không ?", a: ["có", "yes", "đúng"] }
+        ];
+
+        let currentQuestion = null;
+
+        const qText = document.getElementById('question-text');
+        const inputArea = document.getElementById('input-area');
+        const startBtn = document.getElementById('start-btn');
+        const scoreVal = document.getElementById('score-val');
+        const inputField = document.getElementById('user-answer');
+        const dogImg = document.getElementById('pixel-dog-img');
+
+        function startGame() {
+            startBtn.style.display = 'none';
+            inputArea.style.display = 'block';
+            score = 0;
+            scoreVal.innerText = score;
+            qText.innerText = "Đang tải câu hỏi...";
+            setTimeout(nextQuestion, 500);
+        }
+
+        function nextQuestion() {
+            const randomIndex = Math.floor(Math.random() * questions.length);
+            currentQuestion = questions[randomIndex];
+            qText.innerText = currentQuestion.q;
+            inputField.value = '';
+            inputField.focus();
+        }
+
+        function checkAnswer() {
+            const userAns = inputField.value.trim().toLowerCase();
+            
+            if (currentQuestion.a.includes(userAns)) {
+                score++;
+                scoreVal.innerText = score;
+                qText.innerHTML = "<span style='color:green'>Chính xác! 🦴</span>";
+                
+                if (score >= targetScore) {
+                    setTimeout(showVictory, 1000);
+                } else {
+                    setTimeout(nextQuestion, 1000);
+                }
+            } else {
+                qText.innerHTML = "<span style='color:red'>Sai rồi! Thử lại nhé.</span>";
+                setTimeout(nextQuestion, 1500);
+            }
+        }
+
+        inputField.addEventListener("keypress", function(event) {
+            if (event.key === "Enter") checkAnswer();
+        });
+
+        function showVictory() {
+            document.getElementById('letter-overlay').style.display = 'flex';
+            inputArea.style.display = 'none';
+            qText.innerText = "Bạn đã chiến thắng!";
+            startBtn.style.display = 'block';
+            startBtn.innerText = "Chơi lại từ đầu";
+        }
+
+        function closeLetter() {
+            document.getElementById('letter-overlay').style.display = 'none';
+            score = 0; scoreVal.innerText = 0;
+        }
+
+        function pokeDog() {
+            if(inputArea.style.display === 'none') {
+                 qText.innerText = "Gâu! Đừng chạm vào tôi, hãy bấm 'Thử thách ngay'!";
+                 // Hiệu ứng rung nhẹ khi chạm
+                 dogImg.style.transform = "translateX(5px)";
+                 setTimeout(() => { dogImg.style.transform = "translateX(0)"; }, 100);
+            }
+        }
+    </script>
+</body>
+</html>
